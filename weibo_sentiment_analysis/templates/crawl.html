@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据爬取 - 微博舆情分析系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 200px;
+            background-color: #1890ff;
+            color: white;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 0 20px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .sidebar-menu {
+            list-style: none;
+        }
+        .sidebar-menu li {
+            margin: 5px 0;
+        }
+        .sidebar-menu a {
+            display: block;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .sidebar-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-menu .active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* 顶部导航栏 */
+        .top-nav {
+            background-color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .top-nav h2 {
+            font-size: 18px;
+            font-weight: normal;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        .user-info span {
+            margin-right: 10px;
+        }
+        .user-info a {
+            color: #1890ff;
+            text-decoration: none;
+        }
+        /* 内容区域 */
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        .content-header {
+            margin-bottom: 30px;
+        }
+        .content-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .content-header p {
+            color: #666;
+        }
+        /* 爬取表单 */
+        .crawl-form {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+        .form-group .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+        .btn {
+            padding: 12px 24px;
+            background-color: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #40a9ff;
+        }
+        .btn-secondary {
+            background-color: #666;
+            margin-left: 10px;
+        }
+        .btn-secondary:hover {
+            background-color: #888;
+        }
+        /* 爬取结果 */
+        .crawl-result {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .crawl-result h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .result-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-item .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .result-item .meta {
+            color: #666;
+            font-size: 14px;
+        }
+        .success-message {
+            color: #52c41a;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            color: #ff4d4f;
+            margin-bottom: 20px;
+        }
+        /* 热搜话题列表 */
+        .hot-topics {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+        .hot-topics h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .topic-list {
+            list-style: none;
+        }
+        .topic-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .topic-list li:last-child {
+            border-bottom: none;
+        }
+        .topic-list .topic-title {
+            font-weight: bold;
+        }
+        .topic-list .topic-heat {
+            color: #ff4d4f;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">微博舆情分析</div>
+            <ul class="sidebar-menu">
+                <li><a href="/home">首页</a></li>
+                <li><a href="#">微博分析</a></li>
+                <li><a href="#">评论分析</a></li>
+                <li><a href="#">用户分析</a></li>
+                <li><a href="#">舆情分析</a></li>
+                <li><a href="#">词云图</a></li>
+                <li><a href="/crawl" class="active">数据爬取</a></li>
+                <li><a href="#">系统设置</a></li>
+            </ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="top-nav">
+                <h2>微博舆情数据分析平台</h2>
+                <div class="user-info">
+                    <span>当前用户: {{ current_user.username }}</span>
+                    <a href="/logout">退出</a>
+                </div>
+            </div>
+            
+            <!-- 内容区域 -->
+            <div class="content">
+                <div class="content-header">
+                    <h1>数据爬取</h1>
+                    <p>通过关键词爬取微博帖子和评论数据</p>
+                </div>
+                
+                <!-- 爬取表单 -->
+                <div class="crawl-form">
+                    <h3>微博帖子爬取</h3>
+                    <form method="POST" action="/crawl">
+                        <div class="form-group">
+                            <label for="keyword">关键词</label>
+                            <input type="text" id="keyword" name="keyword" placeholder="请输入要搜索的关键词" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pages">爬取页数</label>
+                            <select id="pages" name="pages">
+                                <option value="1">1页</option>
+                                <option value="3">3页</option>
+                                <option value="5">5页</option>
+                                <option value="10">10页</option>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="crawl_comments" name="crawl_comments">
+                            <label for="crawl_comments">同时爬取评论</label>
+                        </div>
+                        <button type="submit" class="btn">开始爬取</button>
+                        <button type="reset" class="btn btn-secondary">重置</button>
+                    </form>
+                </div>
+                
+                <!-- 爬取结果 -->
+                {% if result %}
+                <div class="crawl-result">
+                    <h3>爬取结果</h3>
+                    {% if result.success %}
+                    <div class="success-message">{{ result.message }}</div>
+                    {% else %}
+                    <div class="error-message">{{ result.message }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- 热搜话题 -->
+                <div class="hot-topics">
+                    <h3>微博热搜话题</h3>
+                    <ul class="topic-list">
+                        {% for topic in hot_topics %}
+                        <li>
+                            <span class="topic-title">{{ topic.title }}</span>
+                            <span class="topic-heat">{{ topic.heat }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据可视化 - 微博舆情分析系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 160px;
+            background-color: #0a2463;
+            color: white;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 0 15px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-header img {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+        }
+        .sidebar-menu {
+            list-style: none;
+            margin-top: 15px;
+        }
+        .sidebar-menu li {
+            margin: 2px 0;
+        }
+        .sidebar-menu a {
+            display: block;
+            padding: 8px 15px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 12px;
+        }
+        .sidebar-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-menu .active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* 顶部导航栏 */
+        .top-nav {
+            background-color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .top-nav h2 {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        .user-info span {
+            margin-right: 10px;
+            color: #666;
+        }
+        .user-info a {
+            color: #1890ff;
+            text-decoration: none;
+            margin-left: 8px;
+        }
+        /* 内容区域 */
+        .content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        /* 图表容器 */
+        .chart-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        .chart-section h3 {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .chart {
+            width: 100%;
+            height: 300px;
+        }
+        /* 图表网格布局 */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E" alt="Logo">
+                微博舆情分析
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="/home">首页</a></li>
+                <li><a href="/sentiment">舆情分析</a></li>
+                <li><a href="/visualization" class="active">数据可视化</a></li>
+                <li><a href="/article">微博文章分析</a></li>
+                <li><a href="/ip">微博IP分析</a></li>
+                <li><a href="/comment">微博评论分析</a></li>
+                <li><a href="/public-opinion">微博舆情分析</a></li>
+                <li><a href="/wordcloud">词云图</a></li>
+                <li><a href="/content-wordcloud">微博内容词云图</a></li>
+                <li><a href="/comment-wordcloud">微博评论词云图</a></li>
+                <li><a href="/user-wordcloud">微博评论用户词云图</a></li>
+            </ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="top-nav">
+                <h2>微博舆情数据分析平台</h2>
+                <div class="user-info">
+                    <span>当前用户: {{ current_user.username }}</span>
+                    <a href="/logout">退出</a>
+                </div>
+            </div>
+            
+            <!-- 内容区域 -->
+            <div class="content">
+                <h1 style="font-size: 18px; margin-bottom: 20px; color: #333;">数据可视化</h1>
+                
+                <!-- 图表网格 -->
+                <div class="chart-grid">
+                    <!-- 微博发布量趋势 -->
+                    <div class="chart-section">
+                        <h3>微博发布量趋势</h3>
+                        <div id="publishTrendChart" class="chart"></div>
+                    </div>
+                    
+                    <!-- 评论数量分布 -->
+                    <div class="chart-section">
+                        <h3>评论数量分布</h3>
+                        <div id="commentDistChart" class="chart"></div>
+                    </div>
+                </div>
+                
+                <!-- 图表网格 -->
+                <div class="chart-grid">
+                    <!-- 点赞数量分布 -->
+                    <div class="chart-section">
+                        <h3>点赞数量分布</h3>
+                        <div id="likeDistChart" class="chart"></div>
+                    </div>
+                    
+                    <!-- 转发数量分布 -->
+                    <div class="chart-section">
+                        <h3>转发数量分布</h3>
+                        <div id="repostDistChart" class="chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 初始化图表
+        window.onload = function() {
+            // 微博发布量趋势
+            var publishTrendChart = echarts.init(document.getElementById('publishTrendChart'));
+            var publishTrendOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [1200, 1900, 3000, 2500, 4000, 3600, 5000, 4800, 6000, 5500, 7000, 8000],
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: {
+                        color: '#1890ff'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: 'rgba(24, 144, 255, 0.5)'},
+                            {offset: 1, color: 'rgba(24, 144, 255, 0.1)'}
+                        ])
+                    }
+                }]
+            };
+            publishTrendChart.setOption(publishTrendOption);
+            
+            // 评论数量分布
+            var commentDistChart = echarts.init(document.getElementById('commentDistChart'));
+            var commentDistOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['0-10', '11-50', '51-100', '101-500', '501-1000', '1000+']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [350, 250, 150, 80, 30, 10],
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#52c41a'
+                    }
+                }]
+            };
+            commentDistChart.setOption(commentDistOption);
+            
+            // 点赞数量分布
+            var likeDistChart = echarts.init(document.getElementById('likeDistChart'));
+            var likeDistOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['0-100', '101-500', '501-1000', '1001-5000', '5001-10000', '10000+']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [400, 280, 180, 100, 40, 15],
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#faad14'
+                    }
+                }]
+            };
+            likeDistChart.setOption(likeDistOption);
+            
+            // 转发数量分布
+            var repostDistChart = echarts.init(document.getElementById('repostDistChart'));
+            var repostDistOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['0-50', '51-200', '201-500', '501-1000', '1001-5000', '5000+']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [380, 260, 160, 90, 35, 12],
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#eb2f96'
+                    }
+                }]
+            };
+            repostDistChart.setOption(repostDistOption);
+        };
+        
+        // 响应式处理
+        window.addEventListener('resize', function() {
+            var publishTrendChart = echarts.getInstanceByDom(document.getElementById('publishTrendChart'));
+            var commentDistChart = echarts.getInstanceByDom(document.getElementById('commentDistChart'));
+            var likeDistChart = echarts.getInstanceByDom(document.getElementById('likeDistChart'));
+            var repostDistChart = echarts.getInstanceByDom(document.getElementById('repostDistChart'));
+            
+            publishTrendChart?.resize();
+            commentDistChart?.resize();
+            likeDistChart?.resize();
+            repostDistChart?.resize();
+        });
+    </script>
+</body>
+</html>

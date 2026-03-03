@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索 - 微博舆情分析系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin: 10px 0;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 8px 15px;
+            border-radius: 4px;
+        }
+        .sidebar a:hover {
+            background-color: #34495e;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        .user-info {
+            text-align: right;
+        }
+        .user-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .search-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .search-form input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-form select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0 10px;
+        }
+        .search-form button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-form button:hover {
+            background-color: #2980b9;
+        }
+        .result-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .result-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .post-item, .comment-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .post-item:last-child, .comment-item:last-child {
+            border-bottom: none;
+        }
+        .post-item h3, .comment-item h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .post-item p, .comment-item p {
+            margin: 0 0 10px 0;
+            color: #666;
+        }
+        .post-meta, .comment-meta {
+            font-size: 12px;
+            color: #999;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination a {
+            padding: 8px 12px;
+            margin: 0 5px;
+            background-color: #f1f1f1;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .pagination a:hover {
+            background-color: #ddd;
+        }
+        .pagination .active {
+            background-color: #3498db;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>功能菜单</h2>
+            <ul>
+                <li><a href="{{ url_for('home') }}">首页</a></li>
+                <li><a href="{{ url_for('sentiment') }}">情感分析</a></li>
+                <li><a href="{{ url_for('visualization') }}">数据可视化</a></li>
+                <li><a href="{{ url_for('article') }}">文章分析</a></li>
+                <li><a href="{{ url_for('ip') }}">IP分析</a></li>
+                <li><a href="{{ url_for('comment') }}">评论分析</a></li>
+                <li><a href="{{ url_for('public_opinion') }}">舆情分析</a></li>
+                <li><a href="{{ url_for('wordcloud') }}">词云分析</a></li>
+                <li><a href="{{ url_for('crawl') }}">数据爬取</a></li>
+                <li><a href="{{ url_for('search') }}">搜索功能</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <h1>搜索功能</h1>
+                <div class="user-info">
+                    <p>欢迎, {{ current_user.username }}</p>
+                    <a href="{{ url_for('logout') }}">退出登录</a>
+                </div>
+            </div>
+            
+            <div class="search-form">
+                <form method="POST" action="{{ url_for('search') }}">
+                    <input type="text" name="keyword" placeholder="请输入搜索关键词" required>
+                    <select name="search_type">
+                        <option value="all">全部</option>
+                        <option value="posts">微博帖子</option>
+                        <option value="comments">评论</option>
+                    </select>
+                    <button type="submit">搜索</button>
+                </form>
+            </div>
+            
+            {% if keyword %}
+                <div class="result-section">
+                    <h2>搜索结果: {{ keyword }}</h2>
+                    
+                    {% if posts and posts.items %}
+                        <h3>微博帖子</h3>
+                        {% for post in posts.items %}
+                            <div class="post-item">
+                                <h3>{{ post.author }}</h3>
+                                <p>{{ post.content }}</p>
+                                <div class="post-meta">
+                                    发布时间: {{ post.publish_time.strftime('%Y-%m-%d %H:%M:%S') }} | 
+                                    点赞: {{ post.likes }} | 
+                                    评论: {{ post.comments_count }} | 
+                                    转发: {{ post.reposts }} | 
+                                    位置: {{ post.ip_location or '未知' }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% if posts.pages > 1 %}
+                            <div class="pagination">
+                                {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                    {% if page_num %}
+                                        {% if page_num == posts.page %}
+                                            <a href="{{ url_for('search', page=page_num, keyword=keyword, search_type=search_type) }}" class="active">{{ page_num }}</a>
+                                        {% else %}
+                                            <a href="{{ url_for('search', page=page_num, keyword=keyword, search_type=search_type) }}">{{ page_num }}</a>
+                                        {% endif %}
+                                    {% else %}
+                                        <span>...</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if comments and comments.items %}
+                        <h3>评论</h3>
+                        {% for comment in comments.items %}
+                            <div class="comment-item">
+                                <h4>{{ comment.commenter }}</h4>
+                                <p>{{ comment.content }}</p>
+                                <div class="comment-meta">
+                                    评论时间: {{ comment.comment_time.strftime('%Y-%m-%d %H:%M:%S') }} | 
+                                    点赞: {{ comment.likes }} | 
+                                    位置: {{ comment.ip_location or '未知' }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% if comments.pages > 1 %}
+                            <div class="pagination">
+                                {% for page_num in comments.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                    {% if page_num %}
+                                        {% if page_num == comments.page %}
+                                            <a href="{{ url_for('search', page=page_num, keyword=keyword, search_type=search_type) }}" class="active">{{ page_num }}</a>
+                                        {% else %}
+                                            <a href="{{ url_for('search', page=page_num, keyword=keyword, search_type=search_type) }}">{{ page_num }}</a>
+                                        {% endif %}
+                                    {% else %}
+                                        <span>...</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if not posts or not posts.items %}
+                        {% if not comments or not comments.items %}
+                            <p>没有找到相关结果</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

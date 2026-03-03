@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微博IP分析 - 微博舆情分析系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 160px;
+            background-color: #0a2463;
+            color: white;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 0 15px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-header img {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+        }
+        .sidebar-menu {
+            list-style: none;
+            margin-top: 15px;
+        }
+        .sidebar-menu li {
+            margin: 2px 0;
+        }
+        .sidebar-menu a {
+            display: block;
+            padding: 8px 15px;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            font-size: 12px;
+        }
+        .sidebar-menu a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-menu .active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        /* 主内容区样式 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* 顶部导航栏 */
+        .top-nav {
+            background-color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        .top-nav h2 {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+        .user-info span {
+            margin-right: 10px;
+            color: #666;
+        }
+        .user-info a {
+            color: #1890ff;
+            text-decoration: none;
+            margin-left: 8px;
+        }
+        /* 内容区域 */
+        .content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        /* 图表容器 */
+        .chart-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        .chart-section h3 {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+        /* 图表网格布局 */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/%3E%3C/svg%3E" alt="Logo">
+                微博舆情分析
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="/home">首页</a></li>
+                <li><a href="/sentiment">舆情分析</a></li>
+                <li><a href="/visualization">数据可视化</a></li>
+                <li><a href="/article">微博文章分析</a></li>
+                <li><a href="/ip" class="active">微博IP分析</a></li>
+                <li><a href="/comment">微博评论分析</a></li>
+                <li><a href="/public-opinion">微博舆情分析</a></li>
+                <li><a href="/wordcloud">词云图</a></li>
+                <li><a href="/content-wordcloud">微博内容词云图</a></li>
+                <li><a href="/comment-wordcloud">微博评论词云图</a></li>
+                <li><a href="/user-wordcloud">微博评论用户词云图</a></li>
+            </ul>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="top-nav">
+                <h2>微博舆情数据分析平台</h2>
+                <div class="user-info">
+                    <span>当前用户: {{ current_user.username }}</span>
+                    <a href="/logout">退出</a>
+                </div>
+            </div>
+            
+            <!-- 内容区域 -->
+            <div class="content">
+                <h1 style="font-size: 18px; margin-bottom: 20px; color: #333;">微博IP分析</h1>
+                
+                <!-- IP地区分布 -->
+                <div class="chart-section">
+                    <h3>微博IP地区分布</h3>
+                    <div id="regionChart" class="chart"></div>
+                </div>
+                
+                <!-- 图表网格 -->
+                <div class="chart-grid">
+                    <!-- IP类型分布 -->
+                    <div class="chart-section">
+                        <h3>IP类型分布</h3>
+                        <div id="typeChart" class="chart"></div>
+                    </div>
+                    
+                    <!-- IP活跃度趋势 -->
+                    <div class="chart-section">
+                        <h3>IP活跃度趋势</h3>
+                        <div id="activeChart" class="chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 初始化图表
+        window.onload = function() {
+            // IP地区分布
+            var regionChart = echarts.init(document.getElementById('regionChart'));
+            var regionOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['北京', '上海', '广州', '深圳', '杭州', '成都', '武汉', '西安', '南京', '重庆']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [120, 190, 150, 100, 90, 80, 70, 60, 50, 40],
+                    type: 'bar',
+                    itemStyle: {
+                        color: '#1890ff'
+                    }
+                }]
+            };
+            regionChart.setOption(regionOption);
+            
+            // IP类型分布
+            var typeChart = echarts.init(document.getElementById('typeChart'));
+            var typeOption = {
+                tooltip: {
+                    trigger: 'item'
+                },
+                series: [{
+                    name: 'IP类型',
+                    type: 'pie',
+                    radius: '60%',
+                    data: [
+                        {value: 45, name: '移动网络'},
+                        {value: 30, name: '宽带网络'},
+                        {value: 15, name: '企业网络'},
+                        {value: 10, name: '其他'}
+                    ],
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+            typeChart.setOption(typeOption);
+            
+            // IP活跃度趋势
+            var activeChart = echarts.init(document.getElementById('activeChart'));
+            var activeOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    data: [80, 120, 100, 150, 180, 160, 140],
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: {
+                        color: '#1890ff'
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: 'rgba(24, 144, 255, 0.5)'},
+                            {offset: 1, color: 'rgba(24, 144, 255, 0.1)'}
+                        ])
+                    }
+                }]
+            };
+            activeChart.setOption(activeOption);
+        };
+        
+        // 响应式处理
+        window.addEventListener('resize', function() {
+            var regionChart = echarts.getInstanceByDom(document.getElementById('regionChart'));
+            var typeChart = echarts.getInstanceByDom(document.getElementById('typeChart'));
+            var activeChart = echarts.getInstanceByDom(document.getElementById('activeChart'));
+            
+            regionChart?.resize();
+            typeChart?.resize();
+            activeChart?.resize();
+        });
+    </script>
+</body>
+</html>

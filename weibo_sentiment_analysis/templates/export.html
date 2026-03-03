@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据导出 - 微博舆情分析系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+        }
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar li {
+            margin: 10px 0;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 8px 15px;
+            border-radius: 4px;
+        }
+        .sidebar a:hover {
+            background-color: #34495e;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        .user-info {
+            text-align: right;
+        }
+        .user-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .export-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+        .export-form h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .form-group button:hover {
+            background-color: #2980b9;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .info-box p {
+            margin: 5px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>功能菜单</h2>
+            <ul>
+                <li><a href="{{ url_for('home') }}">首页</a></li>
+                <li><a href="{{ url_for('sentiment') }}">情感分析</a></li>
+                <li><a href="{{ url_for('visualization') }}">数据可视化</a></li>
+                <li><a href="{{ url_for('article') }}">文章分析</a></li>
+                <li><a href="{{ url_for('ip') }}">IP分析</a></li>
+                <li><a href="{{ url_for('comment') }}">评论分析</a></li>
+                <li><a href="{{ url_for('public_opinion') }}">舆情分析</a></li>
+                <li><a href="{{ url_for('wordcloud') }}">词云分析</a></li>
+                <li><a href="{{ url_for('crawl') }}">数据爬取</a></li>
+                <li><a href="{{ url_for('search') }}">搜索功能</a></li>
+                <li><a href="{{ url_for('export') }}">数据导出</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <h1>数据导出</h1>
+                <div class="user-info">
+                    <p>欢迎, {{ current_user.username }}</p>
+                    <a href="{{ url_for('logout') }}">退出登录</a>
+                </div>
+            </div>
+            
+            <div class="export-form">
+                <h2>导出数据</h2>
+                <form method="POST" action="{{ url_for('export') }}">
+                    <div class="form-group">
+                        <label for="data_type">数据类型</label>
+                        <select id="data_type" name="data_type" required>
+                            <option value="posts">微博帖子</option>
+                            <option value="comments">评论</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="export_type">导出格式</label>
+                        <select id="export_type" name="export_type" required>
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit">导出</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="info-box">
+                <h3>导出说明</h3>
+                <p>1. CSV格式：适合在Excel等电子表格软件中查看和分析</p>
+                <p>2. JSON格式：适合在编程环境中处理和分析</p>
+                <p>3. 导出的数据包含所有字段，可根据需要进行筛选和处理</p>
+                <p>4. 导出过程可能需要一定时间，取决于数据量大小</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
